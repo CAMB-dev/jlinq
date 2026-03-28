@@ -141,4 +141,30 @@ class ChainingTest {
                 .toSet();
         assertEquals(Set.of(1, 2, 3), result);
     }
+
+    @Test
+    void sumInt_noArg_afterWhereAndSelect() {
+        int result = Linq.from(List.of("a", "bb", "ccc", "dddd"))
+                .where(s -> s.length() > 1)
+                .select(String::length)
+                .sumInt();
+        assertEquals(9, result);
+    }
+
+    @Test
+    void average_noArg_afterWhereAndSelect() {
+        double result = Linq.from(List.of(1, 2, 3, 4, 5))
+                .where(x -> x > 2)
+                .select(x -> x * 10)
+                .average();
+        assertEquals(40.0, result, 0.0001);
+    }
+
+    @Test
+    void min_afterSelectChangesType() {
+        int result = Linq.from(List.of("apple", "hi", "banana"))
+                .select(String::length)
+                .min();
+        assertEquals(2, result);
+    }
 }
