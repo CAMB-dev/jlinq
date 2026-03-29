@@ -153,6 +153,100 @@ public interface Enumerable<T> extends Iterable<T> {
         return max((Comparator<? super T>) Comparator.naturalOrder());
     }
 
+    default T first() {
+        Iterator<T> it = this.iterator();
+        if (!it.hasNext()) {
+            throw new NoSuchElementException("jlinq -> first: sequence contains no elements");
+        }
+
+        return it.next();
+    }
+
+    default T first(Predicate<? super T> predicate) {
+        Iterator<T> it = this.iterator();
+        if (!it.hasNext()) {
+            throw new NoSuchElementException("jlinq -> first: sequence contains no elements");
+        }
+
+        for (T item : this) {
+            if (predicate.test(item)) {
+                return item;
+            }
+        }
+
+        throw new NoSuchElementException("jlinq -> first: sequence contains no matching element");
+    }
+
+    default T last() {
+        Iterator<T> it = this.iterator();
+        if (!it.hasNext()) {
+            throw new NoSuchElementException("jlinq -> last: sequence contains no elements");
+        }
+
+        T result = it.next();
+        while (it.hasNext()) {
+            result = it.next();
+        }
+        return result;
+    }
+
+    default T last(Predicate<T> predicate) {
+        boolean found = false;
+        T result = null;
+        Iterator<T> it = this.iterator();
+        if (!it.hasNext()) {
+            throw new NoSuchElementException("jlinq -> last: sequence contains no elements");
+        }
+
+        for (T item : this) {
+            if (predicate.test(item)) {
+                result = item;
+                found = true;
+            }
+        }
+        if (!found) {
+            throw new NoSuchElementException("jlinq -> last: sequence contains no matching element");
+        }
+        return result;
+    }
+
+    default T single() {
+        Iterator<T> it = this.iterator();
+        if (!it.hasNext()) {
+            throw new NoSuchElementException("jlinq -> single: sequence contains no elements");
+        }
+
+        T item = it.next();
+        if (it.hasNext()) {
+            throw new IllegalStateException("jlinq -> single: sequence contains more than one element");
+        }
+        return item;
+    }
+
+    default T single(Predicate<? super T> predicate) {
+        Objects.requireNonNull(predicate, "jlinq -> single: predicate cannot be null");
+        boolean found = false;
+        T result = null;
+        Iterator<T> it = this.iterator();
+        if (!it.hasNext()) {
+            throw new NoSuchElementException("jlinq -> single: sequence contains no elements");
+        }
+
+        for (T item : this) {
+            if (predicate.test(item)) {
+                if (found) {
+                    throw new IllegalStateException("jlinq -> single: sequence contains more than one matching element");
+                }
+                result = item;
+                found = true;
+            }
+        }
+        if (!found) {
+            throw new NoSuchElementException("jlinq -> single: sequence contains no matching element");
+        }
+        return result;
+    }
+
     default Enumerable<T> where(Predicate<? super T> predicate) {
         Objects.requireNonNull(predicate, "jlinq -> where: predicate cannot be null");
         return () -> new WhereIterator<>(this.iterator(), (item, i) -> predicate.test(item));
