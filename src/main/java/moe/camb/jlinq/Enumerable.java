@@ -4,9 +4,7 @@ import moe.camb.jlinq.exception.EmptySequenceException;
 import moe.camb.jlinq.exception.MultipleElementsException;
 import moe.camb.jlinq.function.IndexedFunction;
 import moe.camb.jlinq.function.IndexedPredicate;
-import moe.camb.jlinq.iterator.ConcatIterator;
-import moe.camb.jlinq.iterator.SelectIterator;
-import moe.camb.jlinq.iterator.WhereIterator;
+import moe.camb.jlinq.iterator.*;
 
 import java.util.*;
 import java.util.function.*;
@@ -249,6 +247,30 @@ public interface Enumerable<T> extends Iterable<T> {
         return result;
     }
 
+    default boolean any() {
+        return iterator().hasNext();
+    }
+
+    default boolean any(Predicate<? super T> predicate) {
+        Objects.requireNonNull(predicate, "Predicate cannot be null");
+        for (T item : this) {
+            if (predicate.test(item)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    default boolean all(Predicate<? super T> predicate) {
+        Objects.requireNonNull(predicate, "Predicate cannot be null");
+        for (T item : this) {
+            if (!predicate.test(item)) {
+                return false;
+            }
+        }
+        return true;
+    }
+
     default Enumerable<T> where(Predicate<? super T> predicate) {
         Objects.requireNonNull(predicate, "Predicate cannot be null");
         return () -> new WhereIterator<>(this.iterator(), (item, i) -> predicate.test(item));
@@ -272,6 +294,34 @@ public interface Enumerable<T> extends Iterable<T> {
     default Enumerable<T> concat(Enumerable<T> other) {
         Objects.requireNonNull(other, "Other cannot be null");
         return () -> new ConcatIterator<>(this.iterator(), other.iterator());
+    }
+
+    default Enumerable<T> take(int count) {
+        if (count < 0) {
+            throw new IllegalArgumentException("Count cannot be negative");
+        }
+        return () -> new TakeIterator<>(this.iterator(), count);
+    }
+
+    default Enumerable<T> takeWhile(Predicate<? super T> predicate) {
+        Objects.requireNonNull(predicate, "Predicate cannot be null");
+        return () -> new TakeWhileIterator<>(this.iterator(), predicate);
+    }
+
+    default Enumerable<T> skip(int count) {
+        if (count < 0) {
+            throw new IllegalArgumentException("Count cannot be negative");
+        }
+        return () -> new SkipIterator<>(this.iterator(), count);
+    }
+
+    default Enumerable<T> skipWhile(Predicate<? super T> predicate) {
+        Objects.requireNonNull(predicate, "Predicate cannot be null");
+        return () -> new SkipWhileIterator<>(this.iterator(), predicate);
+    }
+
+    default Enumerable<T> distinct() {
+        return () -> new DistinctIterator<>(this.iterator());
     }
 
 }

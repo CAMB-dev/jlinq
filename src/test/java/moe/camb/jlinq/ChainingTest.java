@@ -167,4 +167,82 @@ class ChainingTest {
                 .min();
         assertEquals(2, result);
     }
+
+    @Test
+    void skip_then_take_pagination() {
+        List<Integer> source = List.of(1, 2, 3, 4, 5, 6, 7, 8, 9, 10);
+
+        assertEquals(List.of(1, 2, 3), Linq.from(source).skip(0).take(3).toList());
+        assertEquals(List.of(4, 5, 6), Linq.from(source).skip(3).take(3).toList());
+        assertEquals(List.of(7, 8, 9), Linq.from(source).skip(6).take(3).toList());
+        assertEquals(List.of(10),      Linq.from(source).skip(9).take(3).toList());
+    }
+
+    @Test
+    void skipWhile_then_takeWhile() {
+        List<Integer> result = Linq.from(List.of(1, 2, 3, 4, 5, 6))
+                .skipWhile(x -> x < 3)
+                .takeWhile(x -> x < 5)
+                .toList();
+        assertEquals(List.of(3, 4), result);
+    }
+
+    @Test
+    void takeWhile_then_count() {
+        int count = Linq.from(List.of(1, 2, 3, 4, 5))
+                .takeWhile(x -> x < 4)
+                .count();
+        assertEquals(3, count);
+    }
+
+    @Test
+    void skipWhile_then_first() {
+        int result = Linq.from(List.of(1, 2, 3, 4, 5))
+                .skipWhile(x -> x < 3)
+                .first();
+        assertEquals(3, result);
+    }
+
+    @Test
+    void distinct_then_take() {
+        List<Integer> result = Linq.from(List.of(1, 1, 2, 2, 3, 3, 4, 4))
+                .distinct().take(3).toList();
+        assertEquals(List.of(1, 2, 3), result);
+    }
+
+    @Test
+    void where_distinct_skip_take() {
+        List<Integer> result = Linq.from(List.of(5, 3, 3, 1, 4, 1, 2, 5, 4))
+                .where(x -> x > 1)
+                .distinct()
+                .skip(1)
+                .take(2)
+                .toList();
+        assertEquals(List.of(3, 4), result);
+    }
+
+    @Test
+    void fullChain_allNewOperations() {
+        boolean result = Linq.from(List.of(1, 2, 2, 3, 3, 4, 5, 5))
+                .where(x -> x > 1)
+                .distinct()
+                .skip(1)
+                .take(2)
+                .all(x -> x >= 3);
+        assertTrue(result);
+    }
+
+    @Test
+    void single_afterDistinct() {
+        int result = Linq.from(List.of(5, 5, 5)).distinct().single();
+        assertEquals(5, result);
+    }
+
+    @Test
+    void first_last_afterSkipTake() {
+        Enumerable<Integer> query = Linq.from(List.of(1, 2, 3, 4, 5))
+                .skip(1).take(3);
+        assertEquals(2, query.first());
+        assertEquals(4, query.last());
+    }
 }
