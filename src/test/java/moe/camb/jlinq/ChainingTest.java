@@ -245,4 +245,46 @@ class ChainingTest {
         assertEquals(2, query.first());
         assertEquals(4, query.last());
     }
+
+    @Test
+    void where_orderBy_select() {
+        List<String> result = Linq.from(List.of(5, 3, 1, 4, 2)).where(x -> x > 2).orderBy(x -> x).select(x -> "No." + x).toList();
+        assertEquals(List.of("No.3", "No.4", "No.5"), result);
+    }
+
+    @Test
+    void orderBy_where() {
+        List<Integer> result = Linq.from(List.of(5, 3, 1, 4, 2)).orderBy(x -> x).where(x -> x > 2).toList();
+        assertEquals(List.of(3, 4, 5), result);
+    }
+
+    @Test
+    void orderBy_take() {
+        List<Integer> result = Linq.from(List.of(5, 3, 1, 4, 2)).orderBy(x -> x).take(3).toList();
+        assertEquals(List.of(1, 2, 3), result);
+    }
+
+    @Test
+    void orderBy_first() {
+        int result = Linq.from(List.of(5, 3, 1, 4, 2)).orderBy(x -> x).first();
+        assertEquals(1, result);
+    }
+
+    @Test
+    void orderByDescending_first() {
+        int result = Linq.from(List.of(5, 3, 1, 4, 2)).orderByDescending(x -> x).first();
+        assertEquals(5, result);
+    }
+
+    @Test
+    void orderBy_distinct() {
+        List<Integer> result = Linq.from(List.of(3, 1, 2, 1, 3)).orderBy(x -> x).distinct().toList();
+        assertEquals(List.of(1, 2, 3), result);
+    }
+
+    @Test
+    void orderBy_thenBy_take_select() {
+        List<String> result = Linq.from(List.of("bb", "aa", "ccc", "a", "cc")).orderBy(String::length).thenBy(x -> x).take(3).select(s -> s.toUpperCase()).toList();
+        assertEquals(List.of("A", "AA", "BB"), result);
+    }
 }

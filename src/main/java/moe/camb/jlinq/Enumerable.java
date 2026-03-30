@@ -4,6 +4,7 @@ import moe.camb.jlinq.exception.EmptySequenceException;
 import moe.camb.jlinq.exception.MultipleElementsException;
 import moe.camb.jlinq.function.IndexedFunction;
 import moe.camb.jlinq.function.IndexedPredicate;
+import moe.camb.jlinq.impl.OrderedEnumerableImpl;
 import moe.camb.jlinq.iterator.*;
 
 import java.util.*;
@@ -324,4 +325,18 @@ public interface Enumerable<T> extends Iterable<T> {
         return () -> new DistinctIterator<>(this.iterator());
     }
 
+    default OrderedEnumerable<T> orderBy(Comparator<? super T> comparator) {
+        Objects.requireNonNull(comparator, "Comparator cannot be null");
+        return new OrderedEnumerableImpl<>(this, comparator);
+    }
+
+    default <K extends Comparable<? super K>> OrderedEnumerable<T> orderBy(Function<? super T, ? extends K> keySelector) {
+        Objects.requireNonNull(keySelector, "KeySelector cannot be null");
+        return orderBy(Comparator.comparing(keySelector));
+    }
+
+    default <K extends Comparable<? super K>> OrderedEnumerable<T> orderByDescending(Function<? super T, ? extends K> keySelector) {
+        Objects.requireNonNull(keySelector, "KeySelector cannot be null");
+        return orderBy(Comparator.comparing(keySelector).reversed());
+    }
 }
