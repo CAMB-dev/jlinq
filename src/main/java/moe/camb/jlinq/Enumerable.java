@@ -1,5 +1,7 @@
 package moe.camb.jlinq;
 
+import moe.camb.jlinq.exception.EmptySequenceException;
+import moe.camb.jlinq.exception.MultipleElementsException;
 import moe.camb.jlinq.function.IndexedFunction;
 import moe.camb.jlinq.function.IndexedPredicate;
 import moe.camb.jlinq.iterator.ConcatIterator;
@@ -26,7 +28,7 @@ public interface Enumerable<T> extends Iterable<T> {
     default int count() {
         long count = longCount();
         if (count > Integer.MAX_VALUE) {
-            throw new ArithmeticException("jlinq -> count: Element count exceeds Integer.MAX_VALUE, count: " + count);
+            throw new ArithmeticException("Element count exceeds Integer.MAX_VALUE, count: " + count);
         }
         return (int) count;
     }
@@ -53,7 +55,7 @@ public interface Enumerable<T> extends Iterable<T> {
     }
 
     default int sumInt(ToIntFunction<? super T> selector) {
-        Objects.requireNonNull(selector, "jlinq -> sumInt: selector cannot be null");
+        Objects.requireNonNull(selector, "Selector cannot be null");
         int sum = 0;
         for (T item : this) {
             sum += selector.applyAsInt(item);
@@ -66,7 +68,7 @@ public interface Enumerable<T> extends Iterable<T> {
     }
 
     default long sumLong(ToLongFunction<? super T> selector) {
-        Objects.requireNonNull(selector, "jlinq -> sumLong: selector cannot be null");
+        Objects.requireNonNull(selector, "Selector cannot be null");
         long sum = 0;
         for (T item : this) {
             sum += selector.applyAsLong(item);
@@ -79,7 +81,7 @@ public interface Enumerable<T> extends Iterable<T> {
     }
 
     default double sumDouble(ToDoubleFunction<? super T> selector) {
-        Objects.requireNonNull(selector, "jlinq -> sumDouble: selector cannot be null");
+        Objects.requireNonNull(selector, "Selector cannot be null");
         double sum = 0;
         for (T item : this) {
             sum += selector.applyAsDouble(item);
@@ -92,7 +94,7 @@ public interface Enumerable<T> extends Iterable<T> {
     }
 
     default double average(ToDoubleFunction<? super T> selector) {
-        Objects.requireNonNull(selector, "jlinq -> average: selector cannot be null");
+        Objects.requireNonNull(selector, "Selector cannot be null");
         double sum = 0;
         long count = 0;
         for (T item : this) {
@@ -100,7 +102,7 @@ public interface Enumerable<T> extends Iterable<T> {
             count++;
         }
         if (count == 0) {
-            throw new NoSuchElementException("jlinq -> average: sequence contains no elements");
+            throw new EmptySequenceException();
         }
         return sum / count;
     }
@@ -110,10 +112,10 @@ public interface Enumerable<T> extends Iterable<T> {
     }
 
     default T min(Comparator<? super T> comparator) {
-        Objects.requireNonNull(comparator, "jlinq -> min: comparator cannot be null");
+        Objects.requireNonNull(comparator, "Comparator cannot be null");
         Iterator<T> it = this.iterator();
         if (!it.hasNext()) {
-            throw new NoSuchElementException("jlinq -> min: sequence contains no elements");
+            throw new EmptySequenceException();
         }
 
         T result = it.next();
@@ -132,10 +134,10 @@ public interface Enumerable<T> extends Iterable<T> {
     }
 
     default T max(Comparator<? super T> comparator) {
-        Objects.requireNonNull(comparator, "jlinq -> max: comparator cannot be null");
+        Objects.requireNonNull(comparator, "Comparator cannot be null");
         Iterator<T> it = this.iterator();
         if (!it.hasNext()) {
-            throw new NoSuchElementException("jlinq -> max: sequence contains no elements");
+            throw new EmptySequenceException();
         }
 
         T result = it.next();
@@ -156,7 +158,7 @@ public interface Enumerable<T> extends Iterable<T> {
     default T first() {
         Iterator<T> it = this.iterator();
         if (!it.hasNext()) {
-            throw new NoSuchElementException("jlinq -> first: sequence contains no elements");
+            throw new EmptySequenceException();
         }
 
         return it.next();
@@ -165,7 +167,7 @@ public interface Enumerable<T> extends Iterable<T> {
     default T first(Predicate<? super T> predicate) {
         Iterator<T> it = this.iterator();
         if (!it.hasNext()) {
-            throw new NoSuchElementException("jlinq -> first: sequence contains no elements");
+            throw new EmptySequenceException();
         }
 
         for (T item : this) {
@@ -174,13 +176,13 @@ public interface Enumerable<T> extends Iterable<T> {
             }
         }
 
-        throw new NoSuchElementException("jlinq -> first: sequence contains no matching element");
+        throw new EmptySequenceException("Sequence contains no matching element");
     }
 
     default T last() {
         Iterator<T> it = this.iterator();
         if (!it.hasNext()) {
-            throw new NoSuchElementException("jlinq -> last: sequence contains no elements");
+            throw new EmptySequenceException();
         }
 
         T result = it.next();
@@ -195,7 +197,7 @@ public interface Enumerable<T> extends Iterable<T> {
         T result = null;
         Iterator<T> it = this.iterator();
         if (!it.hasNext()) {
-            throw new NoSuchElementException("jlinq -> last: sequence contains no elements");
+            throw new EmptySequenceException();
         }
 
         for (T item : this) {
@@ -205,7 +207,7 @@ public interface Enumerable<T> extends Iterable<T> {
             }
         }
         if (!found) {
-            throw new NoSuchElementException("jlinq -> last: sequence contains no matching element");
+            throw new EmptySequenceException("Sequence contains no matching element");
         }
         return result;
     }
@@ -213,62 +215,62 @@ public interface Enumerable<T> extends Iterable<T> {
     default T single() {
         Iterator<T> it = this.iterator();
         if (!it.hasNext()) {
-            throw new NoSuchElementException("jlinq -> single: sequence contains no elements");
+            throw new EmptySequenceException();
         }
 
         T item = it.next();
         if (it.hasNext()) {
-            throw new IllegalStateException("jlinq -> single: sequence contains more than one element");
+            throw new MultipleElementsException();
         }
         return item;
     }
 
     default T single(Predicate<? super T> predicate) {
-        Objects.requireNonNull(predicate, "jlinq -> single: predicate cannot be null");
+        Objects.requireNonNull(predicate, "Predicate cannot be null");
         boolean found = false;
         T result = null;
         Iterator<T> it = this.iterator();
         if (!it.hasNext()) {
-            throw new NoSuchElementException("jlinq -> single: sequence contains no elements");
+            throw new EmptySequenceException();
         }
 
         for (T item : this) {
             if (predicate.test(item)) {
                 if (found) {
-                    throw new IllegalStateException("jlinq -> single: sequence contains more than one matching element");
+                    throw new MultipleElementsException("Sequence contains more than one matching element");
                 }
                 result = item;
                 found = true;
             }
         }
         if (!found) {
-            throw new NoSuchElementException("jlinq -> single: sequence contains no matching element");
+            throw new EmptySequenceException("Sequence contains no matching element");
         }
         return result;
     }
 
     default Enumerable<T> where(Predicate<? super T> predicate) {
-        Objects.requireNonNull(predicate, "jlinq -> where: predicate cannot be null");
+        Objects.requireNonNull(predicate, "Predicate cannot be null");
         return () -> new WhereIterator<>(this.iterator(), (item, i) -> predicate.test(item));
     }
 
     default Enumerable<T> where(IndexedPredicate<? super T> predicate) {
-        Objects.requireNonNull(predicate, "jlinq -> where: predicate cannot be null");
+        Objects.requireNonNull(predicate, "Predicate cannot be null");
         return () -> new WhereIterator<>(this.iterator(), predicate);
     }
 
     default <R> Enumerable<R> select(Function<? super T, ? extends R> selector) {
-        Objects.requireNonNull(selector, "jlinq -> select: selector cannot be null");
+        Objects.requireNonNull(selector, "Selector cannot be null");
         return () -> new SelectIterator<>(this.iterator(), (item, i) -> selector.apply(item));
     }
 
     default <R> Enumerable<R> select(IndexedFunction<? super T, ? extends R> selector) {
-        Objects.requireNonNull(selector, "jlinq -> select: selector cannot be null");
+        Objects.requireNonNull(selector, "Selector cannot be null");
         return () -> new SelectIterator<>(this.iterator(), selector);
     }
 
     default Enumerable<T> concat(Enumerable<T> other) {
-        Objects.requireNonNull(other, "jlinq -> concat: other cannot be null");
+        Objects.requireNonNull(other, "Other cannot be null");
         return () -> new ConcatIterator<>(this.iterator(), other.iterator());
     }
 

@@ -2,8 +2,9 @@ package moe.camb.jlinq;
 
 import org.junit.jupiter.api.Test;
 
+import moe.camb.jlinq.exception.EmptySequenceException;
+
 import java.util.List;
-import java.util.NoSuchElementException;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -18,7 +19,7 @@ class AverageTest {
 
     @Test
     void average_withSelector_emptyThrows() {
-        assertThrows(NoSuchElementException.class,
+        assertThrows(EmptySequenceException.class,
                 () -> Linq.from(List.<Integer>of()).average(x -> x));
     }
 
@@ -44,7 +45,7 @@ class AverageTest {
 
     @Test
     void average_noArg_emptyThrows() {
-        assertThrows(NoSuchElementException.class,
+        assertThrows(EmptySequenceException.class,
                 () -> Linq.from(List.<Integer>of()).average());
     }
 

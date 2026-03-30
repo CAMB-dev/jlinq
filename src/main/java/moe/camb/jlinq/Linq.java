@@ -22,4 +22,10 @@ public final class Linq {
         Objects.requireNonNull(source, "source cannot be null");
         return source.toList()::iterator;
     }
+
+    @SafeVarargs
+    public static <T> Enumerable<T> of(T... items) {
+        Objects.requireNonNull(items, "items cannot be null");
+        return () -> Arrays.asList(items).iterator();
+    }
 }
