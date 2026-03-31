@@ -287,4 +287,40 @@ class ChainingTest {
         List<String> result = Linq.from(List.of("bb", "aa", "ccc", "a", "cc")).orderBy(String::length).thenBy(x -> x).take(3).select(s -> s.toUpperCase()).toList();
         assertEquals(List.of("A", "AA", "BB"), result);
     }
+
+    @Test
+    void groupBy_selectMany_roundtrip() {
+        List<Integer> source = List.of(1, 2, 3, 4, 5, 6);
+
+        List<Integer> result = Linq.from(source)
+                .groupBy(x -> x % 2)
+                .selectMany(g -> g.getElements())
+                .orderBy(x -> x)
+                .toList();
+        assertEquals(List.of(1, 2, 3, 4, 5, 6), result);
+    }
+
+    @Test
+    void selectMany_groupBy_combo() {
+        List<Grouping<Integer, Integer>> result = Linq.from(List.of(
+                        List.of(1, 2, 3),
+                        List.of(4, 5, 6)
+                ))
+                .selectMany(x -> x)
+                .groupBy(x -> x % 2)
+                .toList();
+
+        assertEquals(2, result.size());
+    }
+
+    @Test
+    void fullChain_groupBy_where_select_orderBy() {
+        List<String> result = Linq.from(List.of("apple", "avocado", "banana", "blueberry", "cherry"))
+                .groupBy(s -> s.charAt(0))
+                .where(g -> g.getElements().size() > 1)
+                .select(g -> g.getKey() + "(" + g.getElements().size() + ")")
+                .orderBy(x -> x)
+                .toList();
+        assertEquals(List.of("a(2)", "b(2)"), result);
+    }
 }

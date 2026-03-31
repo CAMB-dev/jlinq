@@ -272,6 +272,51 @@ public interface Enumerable<T> extends Iterable<T> {
         return true;
     }
 
+    default boolean contains(T item) {
+        for (T element : this) {
+            if (Objects.equals(element, item)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    default <K, V> Map<K, V> toMap(
+            Function<? super T, ? extends K> keySelector,
+            Function<? super T, ? extends V> valueSelector
+    ) {
+        Objects.requireNonNull(keySelector, "keySelector cannot be null");
+        Objects.requireNonNull(valueSelector, "valueSelector cannot be null");
+        Map<K, V> map = new HashMap<>();
+        for (T item : this) {
+            K key = keySelector.apply(item);
+            V value = valueSelector.apply(item);
+            if (map.containsKey(key)) {
+                throw new IllegalStateException("Duplicate key found: " + key);
+            }
+            map.put(key, value);
+        }
+        return map;
+    }
+
+    default <R> Enumerable<R> selectMany(
+            Function<? super T, ? extends Iterable<? extends R>> selector) {
+        Objects.requireNonNull(selector, "selector cannot be null");
+        return () -> new SelectManyIterator<>(this.iterator(), selector);
+    }
+
+    default <K> Enumerable<Grouping<K, T>> groupBy(Function<? super T, ? extends K> keySelector) {
+        Objects.requireNonNull(keySelector, "keySelector cannot be null");
+        return () -> {
+            Map<K, List<T>> map = new LinkedHashMap<>();
+            for (T item : this) {
+                K key = keySelector.apply(item);
+                map.computeIfAbsent(key, k -> new ArrayList<>()).add(item);
+            }
+            return map.entrySet().stream().map(e -> new Grouping<>(e.getKey(), e.getValue())).iterator();
+        };
+    }
+
     default Enumerable<T> where(Predicate<? super T> predicate) {
         Objects.requireNonNull(predicate, "Predicate cannot be null");
         return () -> new WhereIterator<>(this.iterator(), (item, i) -> predicate.test(item));
